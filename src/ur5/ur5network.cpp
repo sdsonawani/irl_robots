@@ -26,7 +26,14 @@ UR5Network::UR5Network(ros::NodeHandle* n) :
     }
     else
     {
-        throw std::invalid_argument("Missing \"control\" ROS parameters for UR5. Please set them and re-run.");
+        m_p_gain = 1.0;//param_list["ur5"]["p_gain"];
+        m_i_gain = 0.1;//param_list["ur5"]["i_gain"];
+        m_d_gain = 0.0;//param_list["ur5"]["d_gain"];
+        m_max_velocity = 1.57; //param_list["ur5"]["max_velocity"];
+        m_i_max = 1;//param_list["ur5"]["max_i"];
+        m_i_min = -1; //param_list["ur5"]["min_i"];
+        m_max_accel = 1.57; //param_list["ur5"]["max_acceleration"];
+        // throw std::invalid_argument("Missing \"control\" ROS parameters for UR5. Please set them and re-run.");
     }
 
   p_pub_joint  = p_ros_node->advertise<irl_robots::ur5Joints>("/ur5/joints", 1);
@@ -222,7 +229,7 @@ void UR5Network::sendNextCommand()
 
 void UR5Network::readStatus()
 {
-  char buffer[1056];
+  char buffer[1216];
   int size = 0;
   for(auto i = 0; i < sizeof(int);)
   {
@@ -243,15 +250,15 @@ void UR5Network::readStatus()
 
   swapByteorder<int>(&size);
 
-  if(size != 1060)
+  if(size != 1220)
   {
-    ROS_ERROR("UR5 state size is %d, but 1060 expected.", size);
+    ROS_ERROR("UR5 state size is %d, but 1220 expected.", size);
     std::exit(1);
   }
 
-  for(auto i = 0; i < 1056;)
+  for(auto i = 0; i < 1216;)
   {
-    int rvs = recv(p_net_socket, buffer + i, 1056 - i, 0);
+    int rvs = recv(p_net_socket, buffer + i, 1216 - i, 0);
     if(rvs < 0)
     {
       ROS_ERROR("Communication error with UR5");
